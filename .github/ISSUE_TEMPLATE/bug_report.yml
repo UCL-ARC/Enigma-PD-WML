@@ -1,0 +1,32 @@
+name: Bug Report
+description: Have you got a bug? Please report it here!
+labels: ["bug"]
+projects: [""]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A clear and concise description of what the bug is. Please use a short, concise title for the bug and elaborate here
+  - type: textarea
+    id: actual_behaviour
+    attributes:
+      label: What did you get?
+      description: A clear and concise description of what actually happens.
+      placeholder: "If you have a code sample, error messages, stack traces, please provide it here as well"
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output (optional)
+      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      render: Shell
+    validations:
+      required: false
+  - type: textarea
+    id: expected_behaviour
+    attributes:
+      label: What did you expect? (optional)
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: false
