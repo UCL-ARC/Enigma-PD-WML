@@ -1,5 +1,5 @@
 name: Bug Report
-description: Have you got a bug? Please repor Shellt it here!
+description: Have you got a bug? Please report it here!
 labels: ["bug"]
 projects: [""]
 body:
