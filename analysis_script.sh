@@ -1,5 +1,5 @@
 #!/bin/bash
-## May need to add subjid to output log.
+# May need to add subjid to output log.
 
 # FSL Setup
 FSLDIR=/usr/local/fsl
@@ -9,9 +9,7 @@ export FSLDIR PATH
 set -exo
 
 # assign paths for code and input data directories
-#export code_dir=/mnt/bmh01-rds/Hamied_Haroon_doc/ENIGMA-VascPD/UNets-pgs
 export code_dir=/code
-#export data_path=/scratch/${USER}/ENIGMA-PD-Vasc_manual_seg/Sarah_WML_man_seg/Controls+PD
 export data_path=/data
 echo code_dir  : ${code_dir} >> ${code_dir}/logs.txt 2>&1
 echo data_path : ${data_path} >> ${code_dir}/logs.txt 2>&1
@@ -21,19 +19,8 @@ echo   >> ${code_dir}/logs.txt 2>&1
 export subjids_list=${data_path}/subjects.txt
 echo subjids_list : ${subjids_list} >> ${code_dir}/logs.txt 2>&1
 
-# read one line from the list of subject IDs
-# Get the line in the file subkids_list whose line
-# number is equal to the SGE_TASK_ID#
-#export subjid=`awk "NR==$SGE_TASK_ID" ${subjids_list}`
-
-# replace with 1 to test
-#export subjid=`awk "NR==1" ${subjids_list}`
-#for subjid in `cat ${subjids_list}`;
-#do runAnalysis
-#done
-
 function runAnalysis (){
-    export subjid=$1
+   export subjid=$1
 
    echo subjid : ${subjid} >> ${code_dir}/logs.txt 2>&1
    echo   >> ${code_dir}/logs.txt 2>&1
@@ -66,13 +53,13 @@ function runAnalysis (){
    mkdir -p ${temp_dir}/output >> ${code_dir}/logs.txt 2>&1
 
    # change into input directory ${temp_dir}/input
-   # flirt expects to be ran in the same fir (maybe able to do this
+   # flirt expects to be ran in the same dir (maybe able to do this
    # outside of dir, but paths would be long)
    cd ${temp_dir}/input
 
    # copy input T1 and FLAIR images here, renaming them
-   ## files need to be renamed otherwise overwritten when fslroi is called.
-   ## also need to keep original file for flirt command
+   # files need to be renamed otherwise overwritten when fslroi is called.
+   # also need to keep original file for flirt command
    cp ${t1_fn}    t1vol_orig.nii.gz >> ${code_dir}/logs.txt 2>&1
    cp ${flair_fn} flairvol_orig.nii.gz >> ${code_dir}/logs.txt 2>&1
 
@@ -80,15 +67,12 @@ function runAnalysis (){
    # saved to a new subdirectory ${temp_dir}/input/t1-mni.anat
    echo running fsl_anat on t1 in ${temp_dir}/input/t1-mni.anat/  >> ${code_dir}/logs.txt 2>&1
    # flags this will stop fsl_anat going through unnecessary steps and generating outputs we don’t use.
-   # fsl_anat -o t1-mni -i ./t1vol_orig.nii.gz --nononlinreg --noseg --nosubcortseg >> ${code_dir}/logs.txt 2>&1
-   # fsl_anat -o t1-mni -i ./t1vol_orig.nii.gz --nononlinreg --nosubcortseg >> ${code_dir}/logs.txt 2>&1
    fsl_anat -o t1-mni -i ./t1vol_orig.nii.gz --nosubcortseg >> ${code_dir}/logs.txt 2>&1
 
 
 
    echo "fsl_anat done"  >> ${code_dir}/logs.txt 2>&1
    echo   >> ${code_dir}/logs.txt 2>&1
-   # fsl_anat -o t1-mni -i ./t1vol_orig.nii.gz --nocrop
 
    # create new subdirectory to pre-process input FLAIR image, change
    # into it ${temp_dir}/input/flair-bet
@@ -116,14 +100,11 @@ function runAnalysis (){
    echo "flair prep done"  >> ${code_dir}/logs.txt 2>&1
    echo    >> ${code_dir}/logs.txt 2>&1
 
-
-   ############################
-   # ADDED BY HAMIED 11/07/2024
    # create new subdirectory to create distance map from ventricles in order to determine periventricular vs deep white matter,
    # change into it ${temp_dir}/input/vent_dist_mapping
    mkdir ${temp_dir}/input/vent_dist_mapping >> ${code_dir}/logs.txt 2>&1
    cd ${temp_dir}/input/vent_dist_mapping
-   #
+
    # copy required images and transformation/warp coefficients from ${temp_dir}/input/t1-mni.anat here
    cp ../t1-mni.anat/T1_biascorr.nii.gz .
    cp ../t1-mni.anat/T1_biascorr_brain.nii.gz .
@@ -131,19 +112,19 @@ function runAnalysis (){
    cp ../t1-mni.anat/MNI_to_T1_nonlin_field.nii.gz .
    cp ../flair-bet/flairbrain_reg2_t1brain_inv.mat .
    cp ../flair-bet/flairvol_brain.nii.gz .
-   #
+
    # run FSL's make_bianca_mask tool to create binary masks of the ventricles (ventmask) and white matter (bianca_mask)
    make_bianca_mask T1_biascorr.nii.gz T1_fast_pve_0.nii.gz MNI_to_T1_nonlin_field.nii.gz
-   #
+
    # run FSL's flirt tool to transform/align ventmask and bianca_mask with FLAIR brain
    flirt -in T1_biascorr_bianca_mask.nii.gz -applyxfm -init flairbrain2t1brain_inv.mat -out biancamask_trans2_flairbrain -paddingsize 0.0 -interp nearestneighbour -ref flairvol_brain.nii.gz
    flirt -in T1_biascorr_ventmask.nii.gz -applyxfm -init flairbrain2t1brain_inv.mat -out ventmask_trans2_flairbrain -paddingsize 0.0 -interp nearestneighbour -ref flairvol_brain.nii.gz
-   #
+
    # run FSL's distancemap tool to create maps of the distance of every white matter voxel from the edge of the ventricles,
    # in the T1 and FLAIR brains respectively
    distancemap --in=T1_biascorr_ventmask.nii.gz --mask=T1_biascorr_bianca_mask.nii.gz --out=dist_from_vent_t1brain -v
    distancemap --in=ventmask_trans2_flairbrain.nii.gz --mask=biancamask_trans2_flairbrain.nii.gz --out=dist_from_vent_flairbrain -v
-   #
+
    # run FSL's fslmaths tool to threshold the distance-from-ventricles maps to give perivantricular vs deep white matter masks
    fslmaths dist_from_vent_t1brain -uthr 10 -bin perivent_t1brain
    fslmaths dist_from_vent_t1brain -thr 10 -bin dwm_t1brain
@@ -176,8 +157,6 @@ function runAnalysis (){
 
    # run UNets-pgs in Singularity
    echo running UNets-pgs Singularity in ${temp_dir}  >> ${code_dir}/logs.txt 2>&1
-   #singularity exec --cleanenv ${code_dir}/pgs_cvriend.sif sh /WMHs_segmentation_PGS.sh T1.nii.gz FLAIR.nii.gz results.nii.gz ./input ./output
-   #Container contains code naturally now, no need to build.
 
    /WMHs_segmentation_PGS.sh T1.nii.gz FLAIR.nii.gz results.nii.gz ./input ./output >> ${code_dir}/logs.txt 2>&1
 
@@ -195,17 +174,14 @@ function runAnalysis (){
    cp ${temp_dir}/input/t1-mni.anat/T1.nii.gz                      T1_roi.nii.gz >> ${code_dir}/logs.txt 2>&1
    cp  ${temp_dir}/input/t1-mni.anat/T1_fullfov.nii.gz             . >> ${code_dir}/logs.txt 2>&1
    cp ${temp_dir}/input/t1-mni.anat/T1_to_MNI_lin.mat              . >> ${code_dir}/logs.txt 2>&1
-   cp ${temp_dir}/input/t1-mni.anat/T1_to_MNI_nonlin_coeff.nii.gz  . >> ${code_dir}/logs.txt 2>&1   # READDED BY HAMIED 11/07/2024
+   cp ${temp_dir}/input/t1-mni.anat/T1_to_MNI_nonlin_coeff.nii.gz  . >> ${code_dir}/logs.txt 2>&1
    cp ${temp_dir}/input/t1-mni.anat/T1_roi2nonroi.mat              . >> ${code_dir}/logs.txt 2>&1
    cp ${temp_dir}/input/flair-bet/flairbrain2t1brain_inv.mat       . >> ${code_dir}/logs.txt 2>&1
    cp ${temp_dir}/input/flair-bet/flairvol.nii.gz                  FLAIR_orig.nii.gz >> ${code_dir}/logs.txt 2>&1
-   #############################
-   # ADDED BY HAMIED 11/07/2024
    cp ${temp_dir}/input/vent_dist_mapping/perivent_t1brain.nii.gz      . >> ${code_dir}/logs.txt 2>&1
    cp ${temp_dir}/input/vent_dist_mapping/dwm_t1brain.nii.gz           . >> ${code_dir}/logs.txt 2>&1
    cp ${temp_dir}/input/vent_dist_mapping/perivent_flairbrain.nii.gz   . >> ${code_dir}/logs.txt 2>&1
    cp ${temp_dir}/input/vent_dist_mapping/dwm_flairbrain.nii.gz        . >> ${code_dir}/logs.txt 2>&1
-   #############################
 
 
    tree ${temp_dir}/input/ >> ${code_dir}/logs.txt 2>&1
@@ -232,14 +208,11 @@ function runAnalysis (){
      -out results2flairfullfov \
      -paddingsize 0.0 -interp nearestneighbour -ref FLAIR_orig.nii.gz >> ${code_dir}/logs.txt 2>&1
 
-   #############################
-   # ADDED BY HAMIED 11/07/2024
    # run FSL's fslmaths tool to divide WML segmentations from UNets-pgs into periventricular and deep white matter
    fslmaths results2t1roi.nii.gz -mul perivent_t1brain.nii.gz results2t1roi_perivent
    fslmaths results2t1roi.nii.gz -mul dwm_t1brain.nii.gz results2t1roi_deep
    fslmaths results2flairfullfov.nii.gz -mul perivent_flairbrain.nii.gz results2flairfullfov_perivent
    fslmaths results2flairfullfov.nii.gz -mul dwm_flairbrain.nii.gz results2flairfullfov_deep
-   #############################
 
 
    echo "STEP 04" >> ${code_dir}/logs.txt 2>&1
@@ -248,36 +221,28 @@ function runAnalysis (){
      -out results2mni_lin \
      -paddingsize 0.0 -interp nearestneighbour -ref MNI152_T1_1mm_brain.nii.gz >>   ${code_dir}/logs.txt 2>&1
 
-   #############################
-   # ADDED BY HAMIED 11/07/2024
    flirt -in results2t1roi_perivent.nii.gz -applyxfm -init T1_to_MNI_lin.mat \
      -out results2mni_lin_perivent \
      -paddingsize 0.0 -interp nearestneighbour -ref MNI152_T1_1mm_brain.nii.gz >>   ${code_dir}/logs.txt 2>&1
-   #
+
    flirt -in results2t1roi_deep.nii.gz -applyxfm -init T1_to_MNI_lin.mat \
      -out results2mni_lin_deep \
      -paddingsize 0.0 -interp nearestneighbour -ref MNI152_T1_1mm_brain.nii.gz >>   ${code_dir}/logs.txt 2>&1
-   #############################
 
 
-   # echo "STEP 06" >> ${code_dir}/logs.txt 2>&1
-   echo "STEP 05" >> ${code_dir}/logs.txt 2>&1 # ADDED BY HAMIED 11/07/2024
+   echo "STEP 05" >> ${code_dir}/logs.txt 2>&1
    # run FSL's applywarp tool to nonlinearly warp WML segmentations with MNI T1
-   # READDED BY HAMIED 11/07/2024
    applywarp --in=results2t1roi.nii.gz --warp=T1_to_MNI_nonlin_coeff.nii.gz \
           --out=results2mni_nonlin \
           --interp=nn --ref=${FSLDIR}/data/standard/MNI152_T1_1mm_brain.nii.gz >> ${code_dir}/logs.txt 2>&1
 
-   #############################
-   # ADDED BY HAMIED 11/07/2024
    applywarp --in=results2t1roi_perivent.nii.gz --warp=T1_to_MNI_nonlin_coeff.nii.gz \
           --out=results2mni_nonlin_perivent \
           --interp=nn --ref=${FSLDIR}/data/standard/MNI152_T1_1mm_brain.nii.gz >> ${code_dir}/logs.txt 2>&1
-   #
+
    applywarp --in=results2t1roi_deep.nii.gz --warp=T1_to_MNI_nonlin_coeff.nii.gz \
           --out=results2mni_nonlin_deep \
           --interp=nn --ref=${FSLDIR}/data/standard/MNI152_T1_1mm_brain.nii.gz >> ${code_dir}/logs.txt 2>&1
-   #############################
 
 
    # copy all contents of temporary data directory to output data directory, and delete temporary data directory
@@ -294,10 +259,8 @@ function runAnalysis (){
    # change to ${data_outpath}
    cd ${data_outpath}
 
-   #############################
-   # ADDED BY HAMIED 11/07/2024
    zip -u ${subjid}_results.zip ./output/results2mni_lin*.nii.gz ./output/results2mni_nonlin*.nii.gz
-   #
+
    echo =====================================================  >> ${code_dir}/logs.txt 2>&1
    echo please send this zip file to the ENIGMA-PD-Vasc team!  >> ${code_dir}/logs.txt 2>&1
    echo  ${data_outpath}/${subjid}_results.zip  >> ${code_dir}/logs.txt 2>&1
@@ -305,7 +268,6 @@ function runAnalysis (){
    echo    >> ${code_dir}/logs.txt 2>&1
    echo Thank you!  >> ${code_dir}/logs.txt 2>&1
    echo    >> ${code_dir}/logs.txt 2>&1
-   #############################
 
 }
 
