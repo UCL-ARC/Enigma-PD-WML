@@ -135,7 +135,8 @@ function runAnalysis (){
    cd ${temp_dir}/input
 
    # run FSL's fslroi tool to crop correctly-oriented T1 and co-registered FLAIR, ready for UNets-pgs
-   t1size=`fslsize ./t1-mni.anat/T1.nii.gz`
+   # Only crop if dim1 or dim2 are >= 500
+   t1size=( $(fslsize ./t1-mni.anat/T1.nii.gz) )
    if [ ${t1size[1]} -ge 500 ] || [ ${t1size[3]} -ge 500 ]
    then
        fslroi ./t1-mni.anat/T1.nii.gz                     T1    20 472 8 496 0 -1 >> ${code_dir}/logs.txt 2>&1

@@ -45,3 +45,4 @@ repos:
           - --severity=warning
           - --external-sources
           - --shell=bash
+          - --exclude=SC2207
