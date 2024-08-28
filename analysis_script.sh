@@ -110,8 +110,8 @@ function runAnalysis (){
    cp ../t1-mni.anat/T1_biascorr_brain.nii.gz .
    cp ../t1-mni.anat/T1_fast_pve_0.nii.gz .
    cp ../t1-mni.anat/MNI_to_T1_nonlin_field.nii.gz .
-   cp ../flair-bet/flairbrain_reg2_t1brain_inv.mat .
    cp ../flair-bet/flairvol_brain.nii.gz .
+   cp ../flair-bet/flairbrain2t1brain_inv.mat .
 
    # run FSL's make_bianca_mask tool to create binary masks of the ventricles (ventmask) and white matter (bianca_mask)
    make_bianca_mask T1_biascorr.nii.gz T1_fast_pve_0.nii.gz MNI_to_T1_nonlin_field.nii.gz
@@ -122,15 +122,14 @@ function runAnalysis (){
 
    # run FSL's distancemap tool to create maps of the distance of every white matter voxel from the edge of the ventricles,
    # in the T1 and FLAIR brains respectively
-   distancemap --in=T1_biascorr_ventmask.nii.gz --mask=T1_biascorr_bianca_mask.nii.gz --out=dist_from_vent_t1brain -v
-   distancemap --in=ventmask_trans2_flairbrain.nii.gz --mask=biancamask_trans2_flairbrain.nii.gz --out=dist_from_vent_flairbrain -v
+   distancemap --in=T1_biascorr_ventmask.nii.gz --out=dist_from_vent_t1brain -v
+   distancemap --in=ventmask_trans2_flairbrain.nii.gz --out=dist_from_vent_flairbrain -v
 
    # run FSL's fslmaths tool to threshold the distance-from-ventricles maps to give perivantricular vs deep white matter masks
-   fslmaths dist_from_vent_t1brain -uthr 10 -bin perivent_t1brain
-   fslmaths dist_from_vent_t1brain -thr 10 -bin dwm_t1brain
-   fslmaths dist_from_vent_flairbrain -uthr 10 -bin perivent_flairbrain
-   fslmaths dist_from_vent_flairbrain -thr 10 -bin dwm_flairbrain
-   #############################
+   fslmaths dist_from_vent_t1brain -uthr 10 -mas T1_biascorr_bianca_mask -bin perivent_t1brain
+   fslmaths dist_from_vent_t1brain -thr 10 -mas T1_biascorr_bianca_mask -bin dwm_t1brain
+   fslmaths dist_from_vent_flairbrain -uthr 10 -mas biancamask_trans2_flairbrain -bin perivent_flairbrain
+   fslmaths dist_from_vent_flairbrain -thr 10 -mas biancamask_trans2_flairbrain -bin dwm_flairbrain
 
    # change one directory up to ${temp_dir}/input
    cd ${temp_dir}/input
