@@ -2,6 +2,10 @@
 set -euxo pipefail
 
 function runAnalysis (){
+   # set options are lost when running this function in parallel
+   # so set them again here
+   set -euxo pipefail
+
    export subjid=$1
 
    echo subjid : ${subjid}
@@ -274,14 +278,32 @@ mkdir -p $sample_logs_dir >> $overall_log 2>&1
 export subjids_list=${data_path}/subjects.txt
 echo subjids_list : ${subjids_list} >> $overall_log 2>&1
 
-# RUN IN SERIAL
-#for subjid in `cat ${subjids_list}`;
-#do runAnalysis $subjid
-#done
+# Read -n argument, to give number of jobs to use for parallel processing
+# If n=1 (or isn't specified), run sequentially
+n=1
+while getopts "n:" opt; do
+  case ${opt} in
+    n)
+      n=${OPTARG}
+      ;;
+    ?)
+      echo "Invalid option: -${OPTARG}." >> $overall_log 2>&1
+      exit 1
+      ;;
+  esac
+done
 
-# RUN IN PARALLEL
-export -f runAnalysis
-cat ${subjids_list} | parallel --results $sample_logs_dir runAnalysis
-# cat ${subjids_list} | parallel runAnalysis {} ">" $sample_logs_dir/{}-log.txt 2>&1
-
-#done;
+if [[ $n -eq 1 ]]
+then
+  echo "Running sequentially on 1 core"  >> $overall_log 2>&1
+  for subjid in $(cat ${subjids_list});
+  do
+    echo "Processing sample with id ${subjid}" >> $overall_log 2>&1
+    runAnalysis $subjid > $sample_logs_dir/$subjid-log.txt 2>&1
+  done
+else
+  echo "Running in parallel with ${n} jobs"  >> $overall_log 2>&1
+  export -f runAnalysis
+  cat ${subjids_list} | parallel --jobs ${n} runAnalysis {} ">" $sample_logs_dir/{}-log.txt "2>&1"
+  # cat ${subjids_list} | parallel --results $sample_logs_dir runAnalysis
+fi

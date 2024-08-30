@@ -24,6 +24,4 @@ RUN mkdir /code
 
 RUN chmod +x analysis_script.sh
 
-CMD ["/analysis_script.sh"]
-
-ENTRYPOINT []
+ENTRYPOINT ["/analysis_script.sh"]
