@@ -1,1 +1,1 @@
-docker build -f Dockerfile -t fsl_test .
+docker build -f Dockerfile -t enigma-pd-wml .
