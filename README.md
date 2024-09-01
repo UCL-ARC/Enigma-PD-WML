@@ -82,38 +82,25 @@ apptainer build enigma-pd-wml.sif docker-archive:enigma-pd-wml.tar
 
 If your images aren't in NIfTI format, you can use [MRIcroGL](https://www.nitrc.org/projects/mricrogl) to convert them.
 
-## Run the container
+### Make directory structure
 
-## Build and run the docker container
+Create a directory (anywhere on your computer) to hold your input image data and the generated results.
 
-- Clone this repository
+Inside this directory:
 
-```bash
-git clone https://github.com/UCL-ARC/Enigma-PD-WML.git
-```
+- Create `code` and `data` directories. The `code` folder should remain empty.
 
-- Build the docker image
-
-```bash
-cd Enigma-PD-WML
-docker build -f Dockerfile -t fsl_test .
-```
-
-- Create `code` and `data` directories inside the `Enigma-PD-WML` directory
-
-- Create a `subjects.txt` file at `Enigma-PD-WML/data/subjects.txt`.
-  This file should contain subject identifiers (one per line).
+- Inside the `data` folder, create a `subjects.txt` file that contains subject identifiers (one per line).
 
 - For each subject id:
-  - Create a directory at `Enigma-PD-WML/data/subject-id` (replacing 'subject-id' with the relevant id from
-    your `subjects.txt` file)
+  - Create a directory at `data/subject-id` (replacing 'subject-id' with the relevant id from your `subjects.txt` file)
 
   - Create a sub-directory inside the 'subject-id' directory called `niftis`.
 
   - Inside `niftis` place the subject's T1 MRI scan and FLAIR MRI scan. Both these files should be in nifti format
-    (ending `.nii.gz`) and contain either `T1` or `FLAIR` in their name respectively.
+  (ending `.nii.gz`) and contain either `T1` or `FLAIR` in their name respectively.
 
-- Your final file structure should look like below (for two example subject ids):
+Your final file structure should look like below (for two example subject ids):
 
 ```bash
 Enigma-PD-WML
@@ -133,8 +120,28 @@ Enigma-PD-WML
     └───subjects.txt
 ```
 
-- Run the docker container. Make sure you are in the `Enigma-PD-WML` directory when you run this command.
+## Run the container
+
+Below are various ways to run the container. For each, make sure you run the command from the top level of the
+directory you made in the last section.
+
+### Via docker (using image from docker hub)
 
 ```bash
-./docker_runscript.sh
+docker run -v "$(pwd)":/home -v "$(pwd)"/code:/code -v "$(pwd)"/data:/data hamiedaharoon24/enigma-pd-wml
+```
+
+### Via docker (using image built from source)
+
+```bash
+docker run -v "$(pwd)":/home -v "$(pwd)"/code:/code -v "$(pwd)"/data:/data enigma-pd-wml
+```
+
+### Via apptainer
+
+You'll need to put the `.sif` file in the top level of the directory you made in the last section, or provide the full
+path to its location.
+
+```bash
+apptainer run --bind ${PWD}:/home --bind ${PWD}/code:/code --bind ${PWD}/data:/data enigma-pd-wml.sif
 ```
