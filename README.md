@@ -125,6 +125,17 @@ Enigma-PD-WML
 Below are various ways to run the container. For each, make sure you run the command from the top level of the
 directory you made in the last section.
 
+By default, the pipeline will process your samples sequentially on 1 core. If you want to process them in parallel, add
+the `-n` option to the end of the command:
+
+```bash
+# Run with 5 jobs
+-n 5
+```
+
+The value after `-n` will determine the number of jobs that will run in parallel (a good default value is the number of
+cores on your system).
+
 ### Via docker (using image from docker hub)
 
 ```bash

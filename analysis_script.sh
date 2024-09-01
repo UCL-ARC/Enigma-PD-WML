@@ -271,7 +271,7 @@ export FSLDIR PATH
 . ${FSLDIR}/etc/fslconf/fsl.sh
 
 # Create dir to hold sample logs
-export sample_logs_dir=${code_dir}/sample_logs
+sample_logs_dir=${code_dir}/sample_logs
 mkdir -p $sample_logs_dir >> $overall_log 2>&1
 
 # assign path and filename of the list of subject IDs saved as a text file
@@ -305,5 +305,4 @@ else
   echo "Running in parallel with ${n} jobs"  >> $overall_log 2>&1
   export -f runAnalysis
   cat ${subjids_list} | parallel --jobs ${n} runAnalysis {} ">" $sample_logs_dir/{}-log.txt "2>&1"
-  # cat ${subjids_list} | parallel --results $sample_logs_dir runAnalysis
 fi
