@@ -1,13 +1,45 @@
 #!/bin/bash
-set -euxo pipefail
+set -euo pipefail
+
+function allFilesExist(){
+    # Checks that all files in given array exist
+    path_array=("$@")
+    for file_path in "${path_array[@]}";
+    do
+        if [ ! -f $file_path ]
+        then
+            return 1
+        fi
+    done
+    return 0
+}
 
 function fslAnat(){
    # change into input directory ${temp_dir}/input
    cd ${temp_dir}/input
 
+   # if all output files exist, skip rest of function
+   anat_dir=${temp_dir}/input/t1-mni.anat/
+   output_files=(
+    "${anat_dir}"/T1_biascorr_brain.nii.gz
+    "${anat_dir}"/T1_biascorr.nii.gz
+    "${anat_dir}"/T1_fast_pve_0.nii.gz
+    "${anat_dir}"/MNI_to_T1_nonlin_field.nii.gz
+    "${anat_dir}"/T1.nii.gz
+    "${anat_dir}"/T1_fullfov.nii.gz
+    "${anat_dir}"/T1_to_MNI_lin.mat
+    "${anat_dir}"/T1_to_MNI_nonlin_coeff.nii.gz
+    "${anat_dir}"/T1_roi2nonroi.mat
+   )
+   if allFilesExist "${output_files[@]}"
+   then
+        echo "Skipping fsl_anat as output already exists"
+        return
+   fi
+
    # run FSL's fsl_anat tool on the input T1 image, with outputs
    # saved to a new subdirectory ${temp_dir}/input/t1-mni.anat
-   echo running fsl_anat on t1 in ${temp_dir}/input/t1-mni.anat/
+   echo running fsl_anat on t1 in ${anat_dir}
    # flags this will stop fsl_anat going through unnecessary steps and generating outputs we don’t use.
    fsl_anat -o t1-mni -i ./t1vol_orig.nii.gz --nosubcortseg
 
