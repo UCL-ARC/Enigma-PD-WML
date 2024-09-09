@@ -31,7 +31,7 @@ function fslAnat(){
     "${anat_dir}"/T1_to_MNI_nonlin_coeff.nii.gz
     "${anat_dir}"/T1_roi2nonroi.mat
    )
-   if allFilesExist "${output_files[@]}"
+   if [ "$overwrite" = false ] && allFilesExist "${output_files[@]}"
    then
         echo "Skipping fsl_anat as output already exists"
         return
@@ -41,7 +41,7 @@ function fslAnat(){
    # saved to a new subdirectory ${temp_dir}/input/t1-mni.anat
    echo running fsl_anat on t1 in ${anat_dir}
    # flags this will stop fsl_anat going through unnecessary steps and generating outputs we don’t use.
-   fsl_anat -o t1-mni -i ./t1vol_orig.nii.gz --nosubcortseg
+   fsl_anat -o t1-mni -i ./t1vol_orig.nii.gz --nosubcortseg --clobber
 
    echo "fsl_anat done"
    echo
@@ -61,7 +61,7 @@ function flairPrep(){
     "${flair_dir}"/flairvol2t1brain.nii.gz
     "${flair_dir}"/flairvol.nii.gz
    )
-   if allFilesExist "${output_files[@]}"
+   if [ "$overwrite" = false ] && allFilesExist "${output_files[@]}"
    then
         echo "Skipping flair prep as output already exists"
         return
@@ -103,7 +103,7 @@ function ventDistMapping(){
     "${vent_dir}"/perivent_flairbrain.nii.gz
     "${vent_dir}"/dwm_flairbrain.nii.gz
    )
-   if allFilesExist "${output_files[@]}"
+   if [ "$overwrite" = false ] && allFilesExist "${output_files[@]}"
    then
         echo "Skipping ventricle distance mapping as output already exists"
         return
@@ -149,7 +149,7 @@ function prepImagesForUnet(){
     "${temp_dir}"/input/FLAIR.nii.gz
     "${temp_dir}"/input/T1_croppedmore2roi.mat
    )
-   if allFilesExist "${output_files[@]}"
+   if [ "$overwrite" = false ] && allFilesExist "${output_files[@]}"
    then
         echo "Skipping UNets-pgs prep as output already exists"
         return
@@ -185,7 +185,7 @@ function unetsPgs(){
    output_files=(
     "${temp_dir}"/output/results.nii.gz
    )
-   if allFilesExist "${output_files[@]}"
+   if [ "$overwrite" = false ] && allFilesExist "${output_files[@]}"
    then
         echo "Skipping UNets-pgs as output already exists"
         return
@@ -213,7 +213,7 @@ function processOutputs(){
     "${data_outpath}"/output/results2mni_nonlin_deep.nii.gz
     "${data_outpath}"/output/results2mni_nonlin_perivent.nii.gz
    )
-   if allFilesExist "${output_files[@]}"
+   if [ "$overwrite" = false ] && allFilesExist "${output_files[@]}"
    then
         echo "Skipping processing outputs as output already exists"
         return
@@ -312,8 +312,6 @@ function processOutputs(){
 
 function runAnalysis (){
    subjid=$1
-   code_dir=$2
-   data_path=$3
    echo subjid : ${subjid}
    echo
 
@@ -374,5 +372,36 @@ function runAnalysis (){
    echo
 }
 
-# run analysis on (subject id, code_dir, data_path)
-runAnalysis "$1" "$2" "$3"
+subjid=""
+code_dir=""
+data_path=""
+overwrite=false
+while getopts "s:c:d:o" opt; do
+  case ${opt} in
+    s)
+      subjid=${OPTARG}
+      ;;
+    c)
+      code_dir=${OPTARG}
+      ;;
+    d)
+      data_path=${OPTARG}
+      ;;
+    o)
+      overwrite=true
+      ;;
+    ?)
+      echo "Invalid option: -${OPTARG}."
+      exit 1
+      ;;
+  esac
+done
+
+if [ -z ${subjid} ] || [ -z ${code_dir} ] || [ -z ${data_path} ]
+then
+    echo "subject id (-s), code_dir (-c) and data_path (-d) must be provided"
+    exit 1
+else
+    # run analysis on subject id
+    runAnalysis ${subjid}
+fi
