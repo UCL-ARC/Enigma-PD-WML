@@ -50,11 +50,25 @@ function fslAnat(){
 function flairPrep(){
    # create new subdirectory to pre-process input FLAIR image, change
    # into it ${temp_dir}/input/flair-bet
-   mkdir -p ${temp_dir}/input/flair-bet
-   cd ${temp_dir}/input/flair-bet
+   flair_dir=${temp_dir}/input/flair-bet
+   mkdir -p ${flair_dir}
+   cd ${flair_dir}
+
+   # if all output files exist, skip rest of function
+   output_files=(
+    "${flair_dir}"/flairvol_brain.nii.gz
+    "${flair_dir}"/flairbrain2t1brain_inv.mat
+    "${flair_dir}"/flairvol2t1brain.nii.gz
+    "${flair_dir}"/flairvol.nii.gz
+   )
+   if allFilesExist "${output_files[@]}"
+   then
+        echo "Skipping flair prep as output already exists"
+        return
+   fi
 
    # run FSL's tools on input FLAIR image to ensure mni orientation followed by brain extraction
-   echo preparing flair in ${temp_dir}/input/flair-bet/
+   echo preparing flair in ${flair_dir}
    fslreorient2std -m flair_orig2std.mat ../flairvol_orig.nii.gz flairvol
    bet flairvol.nii.gz flairvol_brain -m -R -S -B -Z -v
 
@@ -78,8 +92,22 @@ function flairPrep(){
 function ventDistMapping(){
    # create new subdirectory to create distance map from ventricles in order to determine periventricular vs deep white matter,
    # change into it ${temp_dir}/input/vent_dist_mapping
-   mkdir -p ${temp_dir}/input/vent_dist_mapping
-   cd ${temp_dir}/input/vent_dist_mapping
+   vent_dir=${temp_dir}/input/vent_dist_mapping
+   mkdir -p ${vent_dir}
+   cd ${vent_dir}
+
+   # if all output files exist, skip rest of function
+   output_files=(
+    "${vent_dir}"/perivent_t1brain.nii.gz
+    "${vent_dir}"/dwm_t1brain.nii.gz
+    "${vent_dir}"/perivent_flairbrain.nii.gz
+    "${vent_dir}"/dwm_flairbrain.nii.gz
+   )
+   if allFilesExist "${output_files[@]}"
+   then
+        echo "Skipping ventricle distance mapping as output already exists"
+        return
+   fi
 
    # copy required images and transformation/warp coefficients from ${temp_dir}/input/t1-mni.anat here
    cp ../t1-mni.anat/T1_biascorr.nii.gz .
@@ -115,6 +143,18 @@ function prepImagesForUnet(){
    # change one directory up to ${temp_dir}/input
    cd ${temp_dir}/input
 
+   # if all output files exist, skip rest of function
+   output_files=(
+    "${temp_dir}"/input/T1.nii.gz
+    "${temp_dir}"/input/FLAIR.nii.gz
+    "${temp_dir}"/input/T1_croppedmore2roi.mat
+   )
+   if allFilesExist "${output_files[@]}"
+   then
+        echo "Skipping UNets-pgs prep as output already exists"
+        return
+   fi
+
    # run FSL's fslroi tool to crop correctly-oriented T1 and co-registered FLAIR, ready for UNets-pgs
    # Only crop if dim1 or dim2 are >= 500
    t1size=( $(fslsize ./t1-mni.anat/T1.nii.gz) )
@@ -133,13 +173,23 @@ function prepImagesForUnet(){
      -bins 256 -cost normmi -searchrx 0 0 -searchry 0 0 -searchrz 0 0 -dof 6 \
      -interp trilinear -ref ./t1-mni.anat/T1.nii.gz
 
-  echo "images prepared for UNets-pgs"
+  echo "Images prepared for UNets-pgs"
   echo
 }
 
 function unetsPgs(){
    # change one directory up to ${temp_dir}
    cd ${temp_dir}
+
+   # if all output files exist, skip rest of function
+   output_files=(
+    "${temp_dir}"/output/results.nii.gz
+   )
+   if allFilesExist "${output_files[@]}"
+   then
+        echo "Skipping UNets-pgs as output already exists"
+        return
+   fi
 
    # run UNets-pgs in Singularity
    echo running UNets-pgs Singularity in ${temp_dir}
@@ -153,6 +203,21 @@ function unetsPgs(){
 function processOutputs(){
    # change into output directory ${temp_dir}/output
    cd ${temp_dir}/output
+
+   # if all output files exist, skip rest of function
+   output_files=(
+    "${data_outpath}"/output/results2mni_lin_deep.nii.gz
+    "${data_outpath}"/output/results2mni_lin.nii.gz
+    "${data_outpath}"/output/results2mni_lin_perivent.nii.gz
+    "${data_outpath}"/output/results2mni_nonlin.nii.gz
+    "${data_outpath}"/output/results2mni_nonlin_deep.nii.gz
+    "${data_outpath}"/output/results2mni_nonlin_perivent.nii.gz
+   )
+   if allFilesExist "${output_files[@]}"
+   then
+        echo "Skipping processing outputs as output already exists"
+        return
+   fi
 
    echo processing outputs in ${temp_dir}/output/
 
