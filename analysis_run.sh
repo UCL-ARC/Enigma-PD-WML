@@ -161,7 +161,7 @@ function prepImagesForUnet(){
    if [ ${t1size[1]} -ge 500 ] || [ ${t1size[3]} -ge 500 ]
    then
        fslroi ./t1-mni.anat/T1.nii.gz                     T1    20 472 8 496 0 -1
-       fslroi ./flair-bet/flairvol_trans2_t1brain.nii.gz  FLAIR 20 472 8 496 0 -1
+       fslroi ./flair-bet/flairvol2t1brain.nii.gz         FLAIR 20 472 8 496 0 -1
    else
        cp ./t1-mni.anat/T1.nii.gz                     T1.nii.gz
        cp ./flair-bet/flairvol2t1brain.nii.gz         FLAIR.nii.gz
