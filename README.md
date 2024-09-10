@@ -20,7 +20,7 @@ allowing it to be run on many different systems.
 
 ## Installation
 
-If your MRI data isn't in NIfTI format, install [MRIcroGL from their website](https://www.nitrc.org/projects/mricrogl).
+If your MRI data isn't in NIfTI format, download [MRIcroGL from their website](https://www.nitrc.org/projects/mricrogl).
 
 If you want to run the container via Docker, install [Docker Desktop](https://docs.docker.com/get-started/get-docker/).
 They have installation instructions for [Mac](https://docs.docker.com/desktop/install/mac-install/),
@@ -82,6 +82,16 @@ apptainer build enigma-pd-wml.sif docker-archive:enigma-pd-wml.tar
 
 If your images aren't in NIfTI format, you can use [MRIcroGL](https://www.nitrc.org/projects/mricrogl) to convert them.
 
+Open MRIcroGL and select `Import > Convert DICOM to NifTI`
+![MRIcroGL user interface with the DICOM to NifTI option highlighted](/docs/images/MRIcroGL_window.png)
+
+Set the the output file format to `%i_%p` to include the patient ID and series description in the filename.
+![dcm2niix user interface](/docs/images/MRIcroGL_convert_dicom.png)
+
+You can then drag/drop DICOM files and folders onto the right side of the window to convert them. Alternatively, you can
+click the `Select Folder To Convert` button (at the bottom of the left side of the window) to select a folder to convert
+directly.
+
 ### Make directory structure
 
 Create a directory (anywhere on your computer) to hold your input image data and the generated results.
@@ -126,6 +136,8 @@ Below are various ways to run the container. For each, make sure you run the com
 directory you made in the last section. Note [there are some options](#options) you can add to the end of the
 docker/apptainer command.
 
+If you encounter issues when running the pipeline, check the [output logs](#output-logs) for any errors.
+
 ### Via docker (using image from docker hub)
 
 ```bash
@@ -159,7 +171,8 @@ apptainer run --bind ${PWD}:/home --bind ${PWD}/code:/code --bind ${PWD}/data:/d
   -n 5
   ```
 
-  A good default value is the number of cores on your system, but be wary of increased memory usage.
+  A good default value is the number of cores on your system, but be
+  [wary of increased memory usage](#tensorflow-memory-usage).
 
 - `-o` : whether to overwrite existing output files
 
@@ -167,3 +180,50 @@ apptainer run --bind ${PWD}:/home --bind ${PWD}/code:/code --bind ${PWD}/data:/d
   complete. This is useful if, for example, the pipeline fails at a late stage and you want to run it again, without
   having to re-run time-consuming earlier steps. With `-o` the pipeline will run all steps again and ensure any previous
   output is overwritten.
+
+## Pipeline output
+
+### Output images
+
+The main pipeline output will be written to a zip file (per subject) at
+`/data/UNet-pgs/subject-id/subject-id_results.zip`
+
+This should contain six files within an `output` directory:
+
+- `results2mni_lin.nii.gz`: Linear transformation results in MNI space.
+
+- `results2mni_lin_deep.nii.gz`: Linear transformation results of deep WMLs in MNI space.
+
+- `results2min_lin_perivent.nii.gz`: Linear transformation results of periventricular WMLs in MNI space.
+
+- `results2mni_nonlin.nii.gz`: Nonlinear transformation results in MNI space.
+
+- `results2min_nonlin_deep.nii.gz`: Nonlinear transformation results of deep WMLs in MNI space.
+
+- `results2mni_nonlin_perivent.nii.gz`: Nonlinear transformation results of periventricular WMLs in MNI space.
+
+### Output logs
+
+Pipeline logs can be found at:
+
+- `/code/overall_log.txt`: contains minimal information about the initial pipeline setup.
+
+- `/code/subject_logs`: one log per subject, containing information about the various processing steps.
+
+## Common issues
+
+### Tensorflow memory usage
+
+A common issue is UNets-pgs failing due to high memory usage. You may see warnings / errors in your subject logs
+similar to:
+
+- `tensorflow/core/framework/allocator.cc:124] Allocation of 675840000 exceeds 10% of system memory.`
+
+- `/WMHs_segmentation_PGS.sh: line 14: 69443 Killed`
+
+You may want to try:
+
+- Running the pipeline on a system with more memory
+
+- Reducing the number of jobs passed to the `-n` option (if you're using it). This will slow down the pipeline, but
+  also reduce overall memory usage.
