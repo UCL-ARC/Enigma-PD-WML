@@ -18,12 +18,10 @@ RUN wget https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/releases/fslinstaller.
 RUN echo '\n # FSL Setup \nFSLDIR=/usr/local/fsl \nPATH=${FSLDIR}/share/fsl/bin:${PATH} \nexport FSLDIR PATH \n. ${FSLDIR}/etc/fslconf/fsl.sh' >> /root/.bashrc
 
 COPY analysis_script.sh .
-COPY analysis_run.sh .
 
 RUN mkdir /data
 RUN mkdir /code
 
 RUN chmod +x analysis_script.sh
-RUN chmod +x analysis_run.sh
 
 ENTRYPOINT ["/analysis_script.sh"]
