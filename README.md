@@ -20,23 +20,23 @@ allowing it to be run on many different systems.
 
 ## How to run the pipeline?
 
-Setting up and running the pipeline requires the following steps:
+Setting up and running the pipeline requires the following steps, which are explained in detail in the sections below:
 
 ```mermaid
 %%{init: {"flowchart": {"htmlLabels": false}} }%%
 flowchart TD
     installation("`Install prerequisites`")
-    build("`Build Docker / Apptainer image`")
     convert("`Convert images to NIfTI`")
     structure("`Create standard directory structure`")
+    build("`Build Docker / Apptainer image`")
     run("`Run the container with Docker / Apptainer`")
-    installation --> build
-    build --> convert
+    installation --> convert
     convert --> structure
-    structure --> run
+    structure --> build
+    build --> run
 ```
 
-## Install prerequisites
+## 1. Install prerequisites
 
 If your MRI data isn't in NIfTI format, download [MRIcroGL from their website](https://www.nitrc.org/projects/mricrogl).
 
@@ -48,7 +48,7 @@ They have installation instructions for [Mac](https://docs.docker.com/desktop/in
 If you want to use Apptainer instead, then follow the
 [installation instructions on their website](https://apptainer.org/docs/user/main/quick_start.html).
 
-## Convert images to NIfTI format (if required)
+## 2. Convert images to NIfTI format (if required)
 
 If your images aren't in NIfTI format, you can use [MRIcroGL](https://www.nitrc.org/projects/mricrogl) to convert them.
 
@@ -64,7 +64,7 @@ You can then drag/drop DICOM files and folders onto the right side of the window
 click the `Select Folder To Convert` button (at the bottom of the left side of the window) to select a folder to convert
 directly.
 
-### Create standard directory structure
+## 3. Create standard directory structure
 
 Create a directory (anywhere on your computer) to hold your input image data and the generated results.
 
@@ -103,7 +103,7 @@ Enigma-PD-WML
     └───subjects.txt
 ```
 
-## Build the Docker / Apptainer image
+## 4. Build the Docker / Apptainer image
 
 To build the image (in Docker or Apptainer), you have the following options:
 
@@ -149,11 +149,11 @@ docker image save enigma-pd-wml -o enigma-pd-wml.tar
 apptainer build enigma-pd-wml.sif docker-archive:enigma-pd-wml.tar
 ```
 
-## Run the container
+## 5. Run the container
 
 Below are various ways to run the container. For each, make sure you run the command from the top level of the
-directory you made in the last section. Note [there are some options](#options) you can add to the end of the
-docker/apptainer command.
+directory you made in the ['Create standard directory structure' section](#3-create-standard-directory-structure).
+Note [there are some options](#options) you can add to the end of the docker/apptainer command.
 
 If you encounter issues when running the pipeline, check the [output logs](#output-logs) for any errors.
 
@@ -171,8 +171,9 @@ docker run -v "$(pwd)":/home -v "$(pwd)"/code:/code -v "$(pwd)"/data:/data enigm
 
 ### Via apptainer
 
-You'll need to put the `.sif` file in the top level of the directory you made in the last section, or provide the full
-path to its location.
+You'll need to put the `.sif` file in the top level of the directory you made in the
+['Create standard directory structure' section](#3-create-standard-directory-structure), or provide the full path to
+its location.
 
 ```bash
 apptainer run --bind ${PWD}:/home --bind ${PWD}/code:/code --bind ${PWD}/data:/data enigma-pd-wml.sif
