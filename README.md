@@ -210,17 +210,17 @@ The main pipeline output will be written to a zip file (per subject) at
 
 This should contain six files within an `output` directory:
 
-- `results2mni_lin.nii.gz`: Linear transformation results in MNI space.
+- `results2mni_lin.nii.gz`: WML segmentations linearly transformed to MNI space.
 
-- `results2mni_lin_deep.nii.gz`: Linear transformation results of deep WMLs in MNI space.
+- `results2mni_lin_deep.nii.gz`: WML segmentations (deep white matter) linearly transformed to MNI space.
 
-- `results2min_lin_perivent.nii.gz`: Linear transformation results of periventricular WMLs in MNI space.
+- `results2min_lin_perivent.nii.gz`: WML segmentations (periventricular) linearly transformed to MNI space.
 
-- `results2mni_nonlin.nii.gz`: Nonlinear transformation results in MNI space.
+- `results2mni_nonlin.nii.gz`: WML segmentations non-linearly transformed to MNI space.
 
-- `results2min_nonlin_deep.nii.gz`: Nonlinear transformation results of deep WMLs in MNI space.
+- `results2min_nonlin_deep.nii.gz`: WML segmentations (deep white matter) non-linearly transformed to MNI space.
 
-- `results2mni_nonlin_perivent.nii.gz`: Nonlinear transformation results of periventricular WMLs in MNI space.
+- `results2mni_nonlin_perivent.nii.gz`: WML segmentations (periventricular) non-linearly transformed to MNI space.
 
 ### Output logs
 
