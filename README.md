@@ -18,7 +18,25 @@ the same scanning session. The analysis steps (including pre- and post- processi
 The pipeline is available as a [Docker](https://www.docker.com/) or [Apptainer](https://apptainer.org/) container,
 allowing it to be run on many different systems.
 
-## Installation
+## How to run the pipeline?
+
+Setting up and running the pipeline requires the following steps:
+
+```mermaid
+%%{init: {"flowchart": {"htmlLabels": false}} }%%
+flowchart LR
+    installation("`Install prerequisites`")
+    build("`Build Docker / Apptainer image`")
+    convert("`Convert images to NIfTI`")
+    structure("`Create standard directory structure`")
+    run("`Run the container with Docker / Apptainer`")
+    installation --> build
+    build --> convert
+    convert --> structure
+    structure --> run
+```
+
+## Install prerequisites
 
 If your MRI data isn't in NIfTI format, download [MRIcroGL from their website](https://www.nitrc.org/projects/mricrogl).
 
@@ -29,6 +47,61 @@ They have installation instructions for [Mac](https://docs.docker.com/desktop/in
 
 If you want to use Apptainer instead, then follow the
 [installation instructions on their website](https://apptainer.org/docs/user/main/quick_start.html).
+
+## Convert images to NIfTI format (if required)
+
+If your images aren't in NIfTI format, you can use [MRIcroGL](https://www.nitrc.org/projects/mricrogl) to convert them.
+
+Open MRIcroGL and select `Import > Convert DICOM to NifTI`
+
+![MRIcroGL user interface with the DICOM to NifTI option highlighted](/docs/images/MRIcroGL_window.png)
+
+Set the the output file format to `%i_%p` to include the patient ID and series description in the filename.
+
+![dcm2niix user interface](/docs/images/MRIcroGL_convert_dicom.png)
+
+You can then drag/drop DICOM files and folders onto the right side of the window to convert them. Alternatively, you can
+click the `Select Folder To Convert` button (at the bottom of the left side of the window) to select a folder to convert
+directly.
+
+### Create standard directory structure
+
+Create a directory (anywhere on your computer) to hold your input image data and the generated results.
+
+Inside this directory:
+
+- Create `code` and `data` directories. The `code` folder should remain empty.
+
+- Inside the `data` folder, create a `subjects.txt` file that contains subject identifiers (one per line) e.g. these
+  could be numeric subject ids.
+
+- For each subject id:
+  - Create a directory at `data/subject-id` (replacing 'subject-id' with the relevant id from your `subjects.txt` file)
+
+  - Create a sub-directory inside the 'subject-id' directory called `niftis`.
+
+  - Inside `niftis` place the subject's T1 MRI scan and FLAIR MRI scan. Both these files should be in nifti format
+  (ending `.nii.gz`) and contain either `T1` or `FLAIR` in their name respectively.
+
+Your final file structure should look like below (for two example subject ids):
+
+```bash
+Enigma-PD-WML
+│
+├───code
+│
+└───data
+    ├───subject-1
+    │   └───niftis
+    │       ├───T1.nii.gz
+    │       └───FLAIR.nii.gz
+    │
+    ├───subject-2
+    │   └───niftis
+    │       ├───T1.nii.gz
+    │       └───FLAIR.nii.gz
+    └───subjects.txt
+```
 
 ## Build the Docker / Apptainer image
 
@@ -74,60 +147,6 @@ If you want to run the container via Apptainer, you can convert this Docker imag
 ```bash
 docker image save enigma-pd-wml -o enigma-pd-wml.tar
 apptainer build enigma-pd-wml.sif docker-archive:enigma-pd-wml.tar
-```
-
-## Prepare your image data
-
-### Convert to NIfTI format
-
-If your images aren't in NIfTI format, you can use [MRIcroGL](https://www.nitrc.org/projects/mricrogl) to convert them.
-
-Open MRIcroGL and select `Import > Convert DICOM to NifTI`
-![MRIcroGL user interface with the DICOM to NifTI option highlighted](/docs/images/MRIcroGL_window.png)
-
-Set the the output file format to `%i_%p` to include the patient ID and series description in the filename.
-![dcm2niix user interface](/docs/images/MRIcroGL_convert_dicom.png)
-
-You can then drag/drop DICOM files and folders onto the right side of the window to convert them. Alternatively, you can
-click the `Select Folder To Convert` button (at the bottom of the left side of the window) to select a folder to convert
-directly.
-
-### Make directory structure
-
-Create a directory (anywhere on your computer) to hold your input image data and the generated results.
-
-Inside this directory:
-
-- Create `code` and `data` directories. The `code` folder should remain empty.
-
-- Inside the `data` folder, create a `subjects.txt` file that contains subject identifiers (one per line).
-
-- For each subject id:
-  - Create a directory at `data/subject-id` (replacing 'subject-id' with the relevant id from your `subjects.txt` file)
-
-  - Create a sub-directory inside the 'subject-id' directory called `niftis`.
-
-  - Inside `niftis` place the subject's T1 MRI scan and FLAIR MRI scan. Both these files should be in nifti format
-  (ending `.nii.gz`) and contain either `T1` or `FLAIR` in their name respectively.
-
-Your final file structure should look like below (for two example subject ids):
-
-```bash
-Enigma-PD-WML
-│
-├───code
-│
-└───data
-    ├───subject-1
-    │   └───niftis
-    │       ├───T1.nii.gz
-    │       └───FLAIR.nii.gz
-    │
-    ├───subject-2
-    │   └───niftis
-    │       ├───T1.nii.gz
-    │       └───FLAIR.nii.gz
-    └───subjects.txt
 ```
 
 ## Run the container
