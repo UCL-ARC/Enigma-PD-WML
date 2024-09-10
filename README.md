@@ -24,7 +24,7 @@ Setting up and running the pipeline requires the following steps:
 
 ```mermaid
 %%{init: {"flowchart": {"htmlLabels": false}} }%%
-flowchart LR
+flowchart TD
     installation("`Install prerequisites`")
     build("`Build Docker / Apptainer image`")
     convert("`Convert images to NIfTI`")
