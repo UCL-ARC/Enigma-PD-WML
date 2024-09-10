@@ -387,9 +387,9 @@ function setupRunAnalysis(){
   export FSLDIR PATH
   . ${FSLDIR}/etc/fslconf/fsl.sh
 
-  # Create dir to hold sample logs
-  sample_logs_dir=${code_dir}/sample_logs
-  mkdir -p $sample_logs_dir
+  # Create dir to hold subject logs
+  subject_logs_dir=${code_dir}/subject_logs
+  mkdir -p $subject_logs_dir
 
   # assign path and filename of the list of subject IDs saved as a text file
   subjids_list=${data_path}/subjects.txt
@@ -421,13 +421,13 @@ function setupRunAnalysis(){
     echo "Running sequentially on 1 core"
     for subjid in $(cat ${subjids_list});
     do
-      echo "Processing sample with id ${subjid}"
-      runAnalysis $subjid > $sample_logs_dir/${subjid}-log.txt 2>&1
+      echo "Processing subject with id ${subjid}"
+      runAnalysis $subjid > $subject_logs_dir/${subjid}-log.txt 2>&1
     done
   else
     echo "Running in parallel with ${n} jobs"
     export -f runAnalysis fslAnat flairPrep ventDistMapping prepImagesForUnet unetsPgs processOutputs allFilesExist
-    cat ${subjids_list} | parallel --jobs ${n} runAnalysis {} ">" ${sample_logs_dir}/{}-log.txt "2>&1"
+    cat ${subjids_list} | parallel --jobs ${n} runAnalysis {} ">" ${subject_logs_dir}/{}-log.txt "2>&1"
   fi
 }
 
@@ -437,5 +437,5 @@ export data_path=/data
 overall_log=${code_dir}/overall_log.txt
 
 echo "Running analysis script"
-echo "See overall log at /code/overall_log.txt and sample logs at /code/sample_logs/"
+echo "See overall log at /code/overall_log.txt and subject logs at /code/subject_logs/"
 setupRunAnalysis "$@" >> $overall_log 2>&1

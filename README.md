@@ -123,18 +123,8 @@ Enigma-PD-WML
 ## Run the container
 
 Below are various ways to run the container. For each, make sure you run the command from the top level of the
-directory you made in the last section.
-
-By default, the pipeline will process your samples sequentially on 1 core. If you want to process them in parallel, add
-the `-n` option to the end of the command:
-
-```bash
-# Run with 5 jobs
--n 5
-```
-
-The value after `-n` will determine the number of jobs that will run in parallel (a good default value is the number of
-cores on your system).
+directory you made in the last section. Note [there are some options](#options) you can add to the end of the
+docker/apptainer command.
 
 ### Via docker (using image from docker hub)
 
@@ -156,3 +146,24 @@ path to its location.
 ```bash
 apptainer run --bind ${PWD}:/home --bind ${PWD}/code:/code --bind ${PWD}/data:/data enigma-pd-wml.sif
 ```
+
+### Options
+
+- `-n` : the number of jobs to run in parallel.
+
+  By default (without `-n`), the pipeline will process your subjects sequentially on 1 core. With `-n` they will be
+  processed in parallel with `n` jobs. For example:
+
+  ```bash
+  # Run with 5 jobs
+  -n 5
+  ```
+
+  A good default value is the number of cores on your system, but be wary of increased memory usage.
+
+- `-o` : whether to overwrite existing output files
+
+  By default (without `-o`), the pipeline will try to re-use any existing output files, skipping steps that are already
+  complete. This is useful if, for example, the pipeline fails at a late stage and you want to run it again, without
+  having to re-run time-consuming earlier steps. With `-o` the pipeline will run all steps again and ensure any previous
+  output is overwritten.
