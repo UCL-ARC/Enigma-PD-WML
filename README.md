@@ -13,7 +13,8 @@ the same scanning session. The analysis steps (including pre- and post- processi
 - [UNet-pgs](https://www.sciencedirect.com/science/article/pii/S1053811921004171?via%3Dihub) : A segmentation pipeline
   for white matter hyperintensities (WMHs) using U-Net.
 
-- [MRIcroGL](https://www.nitrc.org/projects/mricrogl) : A tool for converting DICOM images to NIfTI format.
+- [MRIcroGL](https://www.nitrc.org/projects/mricrogl) : A tool including a graphical interface for dcm2niix to convert
+  DICOM images to NIfTI format.
 
 For details of the processing steps, see the [pipeline documentation](/docs/pipeline.md).
 
@@ -52,7 +53,10 @@ If you want to use Apptainer instead, then follow the
 
 ## 2. Convert images to NIfTI format (if required)
 
-If your images aren't in NIfTI format, you can use [MRIcroGL](https://www.nitrc.org/projects/mricrogl) to convert them.
+If your images aren't in NIfTI format, you can use [`dcm2niix`](https://github.com/rordenlab/dcm2niix) to convert them.
+This is available via the command-line or via a graphical interface inside
+[MRIcroGL](https://www.nitrc.org/projects/mricrogl). Steps for converting with the graphical interface are provided
+below:
 
 Open MRIcroGL and select `Import > Convert DICOM to NifTI`
 
