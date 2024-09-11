@@ -249,3 +249,8 @@ You may want to try:
 
 - Reducing the number of jobs passed to the `-n` option (if you're using it). This will slow down the pipeline, but
   also reduce overall memory usage.
+
+## For developers
+
+Some brief notes on the development setup for this repository are provided in a
+[separate developer docs file](/docs/developer.md).
