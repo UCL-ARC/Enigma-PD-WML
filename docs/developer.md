@@ -51,10 +51,10 @@ There are two main components to the Dockerfile:
 - The requirements for UNets-pgs
 - The requirements for FSL
 
-All requirements for the UNets-pgs workflow are coming from the
+All requirements for the UNets-pgs workflow come from the
 [base pgs image](https://hub.docker.com/r/cvriend/pgs/tags), including the bash script and packages like tensorflow.
 
-FSL is being installed as detailed in their [installation docs](https://fsl.fmrib.ox.ac.uk/fsl/docs/#/install/container)
+FSL is installed as detailed in their [installation docs](https://fsl.fmrib.ox.ac.uk/fsl/docs/#/install/container)
 and [configuration docs](https://fsl.fmrib.ox.ac.uk/fsl/docs/#/install/configuration). We're using the `-V` option at
 the end of the `fslinstaller` command to [fix it to a specific FSL version
 ](https://fsl.fmrib.ox.ac.uk/fsl/docs/#/install/index?id=installing-older-versions-of-fsl).
