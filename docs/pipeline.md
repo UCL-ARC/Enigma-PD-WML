@@ -5,6 +5,22 @@ All processing steps are called via a [bash script `analysis_script.sh`](../anal
 This processes each subject's T1-weighted and FLAIR MRI images with the following main steps (each is a separate
 function in the bash script):
 
+```mermaid
+%%{init: {"flowchart": {"htmlLabels": false}} }%%
+flowchart TD
+    fsl_anat("`Run fsl_anat on T1 image`")
+    flair_prep("`Pre-process FLAIR image and align it to T1 image`")
+    vent_dist("`Create periventricular vs deep white matter masks for T1 and FLAIR images`")
+    unet_prep("`Crop T1/FLAIR images, ready for UNets-pgs`")
+    unet("`Run UNets-pgs to segment WMLs`")
+    process_output("`Split WML segmentations into periventricular vs deep white matter + align to standard MNI template`")
+    fsl_anat --> flair_prep
+    flair_prep --> vent_dist
+    vent_dist --> unet_prep
+    unet_prep --> unet
+    unet --> process_output
+```
+
 ## fsl_anat
 
 First, FSL's `fsl_anat` tool is run on the input T1 image and its output saved to
@@ -13,7 +29,7 @@ First, FSL's `fsl_anat` tool is run on the input T1 image and its output saved t
 [See FSL's documentation](https://fsl.fmrib.ox.ac.uk/fsl/docs/#/structural/fsl_anat) for details of the various
 processing steps this includes.
 
-## FLAIR prep
+## FLAIR preparation
 
 Next, various FSL tools are used to pre-process the input FLAIR image and align it to the T1 image. Results are written
 to `/code/Controls+PD/subject-id/input/flair-bet`. This includes steps to:
@@ -37,7 +53,7 @@ written to `/code/Controls+PD/subject-id/input/vent_dist_mapping`.
 This includes steps to:
 
 - create binary masks of the ventricles and white matter with
-  [`make_bianca_mask`](https://fsl.fmrib.ox.ac.uk/fsl/docs/#/structural/bianca?id=post-processing)
+  [`make_bianca_mask`](https://fsl.fmrib.ox.ac.uk/fsl/docs/#/structural/bianca)
 
 - Align these masks with the FLAIR brain with `flirt`
 
@@ -56,9 +72,13 @@ under `/code/Controls+PD/subject-id/output/results.nii.gz`
 
 ## Process outputs of UNets-pgs
 
-Next, the output from UNets-pgs is processed with various fsl tools. This includes steps to:
+Next, the output from UNets-pgs is processed with various fsl tools. This splits the WML segmentation from UNets-pgs
+into periventricular vs deep white matter, as well as linearly/non-linearly aligning it to the standard MNI T1 1 mm
+template.
 
-- Align WML segmentations from UNets-pgs with cropped T1 image, full size T1 image and full size FLAIR image
+This includes steps to:
+
+- Align WML segmentations from UNets-pgs with the cropped T1 image, the full size T1 image and the full size FLAIR image
   (via `flirt`)
 
 - Use masks from the [ventricular distance mapping step](#ventricular-distance-mapping) and `fslmaths` to divide WML

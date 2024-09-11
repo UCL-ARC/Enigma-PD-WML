@@ -15,6 +15,8 @@ the same scanning session. The analysis steps (including pre- and post- processi
 
 - [MRIcroGL](https://www.nitrc.org/projects/mricrogl) : A tool for converting DICOM images to NIfTI format.
 
+For details of the processing steps, see the [pipeline documentation](/docs/pipeline.md).
+
 The pipeline is available as a [Docker](https://www.docker.com/) or [Apptainer](https://apptainer.org/) container,
 allowing it to be run on many different systems.
 
